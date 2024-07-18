@@ -33,9 +33,9 @@ def buscar_ovi(semana=None):
     if conexao:
         cursor = conexao.cursor()
         if semana:
-            cursor.execute(f"SELECT semana_3 FROM semanas")
+            cursor.execute(f"SELECT semana_3, semana_5, semana_7, semana_9, semana_11, semana_15, semana_17, semana_19, semana_21, semana_25, semana_27 FROM semanas")
         else:
-            cursor.execute("SELECT semana_3 FROM semanas")
+            cursor.execute("SELECT semana_3, semana_5, semana_7, semana_9, semana_11, semana_15, semana_17, semana_19, semana_21, semana_25, semana_27 FROM semanas")
         ovos = cursor.fetchall()
         cursor.close()
         conexao.close()
