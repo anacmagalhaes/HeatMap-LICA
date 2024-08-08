@@ -1,8 +1,8 @@
 import folium
 from folium.plugins import HeatMap
 import streamlit as st
-from streamlit_folium import folium_static 
-from conexao import buscar_localizacoes, buscar_ovi
+from streamlit_folium import folium_static
+from conexao import buscar_localizacoes, buscar_ovi, buscar_semanas
 
 # Cria o mapa de calor
 def create_heatmap(locais, ovos):
@@ -27,44 +27,39 @@ def create_heatmap(locais, ovos):
 
     return mapa
 
+# Interface do Streamlit
+st.title('Mapa de Calor de Ovos por Semana')
+
 # Dados do banco de dados
 dados_localizacoes = buscar_localizacoes()
-dados_ovi = buscar_ovi()
+semanas_disponiveis = buscar_semanas()
 
-# Verifica se os dados foram carregados corretamente
-if not dados_localizacoes or not dados_ovi:
-    st.error("Erro ao carregar os dados do banco de dados.")
+# Verifica se as semanas foram carregadas corretamente
+if not semanas_disponiveis:
+    st.error("Erro ao carregar as semanas do banco de dados.")
 else:
-    # Prepara as localizações para HeatMap
-    locais = [[localizacao[0], localizacao[1]] for localizacao in dados_localizacoes]
-
-    # Interface do Streamlit
-    st.title('Mapa de Calor de Ovos por Semana')
-
     # Selecionar a semana
-    semana_opcoes = ['Semana 3', 'Semana 5', 'Semana 7', 'Semana 9', 'Semana 11', 'Semana 15', 'Semana 17', 'Semana 19', 'Semana 21', 'Semana 23', 'Semana 25', 'Semana 27']
-    semana = st.selectbox('Selecione a semana:', semana_opcoes)
+    semana = st.selectbox('Selecione a semana:', semanas_disponiveis)
 
-    # Index da semana selecionada
-    semana_index = semana_opcoes.index(semana)
+    # Busca os dados da semana selecionada
+    dados_ovi = buscar_ovi(semana)
 
-    # Verifica os índices
-    if len(dados_ovi[0]) <= semana_index:
-        st.error(f"A semana {semana} não está presente nos dados.")
+    # Verifica se os dados foram carregados corretamente
+    if not dados_localizacoes or not dados_ovi:
+        st.error("Erro ao carregar os dados do banco de dados.")
     else:
-        # Prepara os dados da semana selecionada
-        ovos = [ovo[semana_index] for ovo in dados_ovi]
-        #st.write(f"Dados para a semana {semana}: {ovos}")  # Debug: Exibir os dados da semana selecionada
+        # Prepara as localizações para HeatMap
+        locais = [[localizacao[0], localizacao[1]] for localizacao in dados_localizacoes]
 
         # Verifica se a lista de ovos está vazia
-        if not ovos:
-            st.error(f"Não há dados de ovos para a {semana}.")
+        if not dados_ovi:
+            st.error(f"Não há dados de ovos para a semana {semana}.")
         # Verifica se todos os valores na lista de ovos são zero
-        elif all(o == 0 for o in ovos):
-            st.error(f"Todos os valores de ovos na {semana} são zero.")
+        elif all(o == 0 for o in dados_ovi):
+            st.error(f"Todos os valores de ovos na semana {semana} são zero.")
         else:
             # Cria o mapa de calor
-            mapa = create_heatmap(locais, ovos)
+            mapa = create_heatmap(locais, dados_ovi)
 
-            # Exibi o mapa no Streamlit
+            # Exibe o mapa no Streamlit
             folium_static(mapa)

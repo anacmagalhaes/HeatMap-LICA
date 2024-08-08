@@ -1,10 +1,11 @@
 import mysql.connector
 
+# Configuração do banco de dados
 def conectar():
     config = {
         'user': 'root',
         'host': '127.0.0.1',
-        'database': 'teste_ovi',
+        'database': 'ovitrampas',
         'port': '3306',
         'raise_on_warnings': True,
     }
@@ -16,11 +17,12 @@ def conectar():
         print(f"Erro ao conectar: {err}")
         return None
 
+# Buscar localizações (latitude e longitude) da tabela "ovitrampas"
 def buscar_localizacoes():
     conexao = conectar()
     if conexao:
         cursor = conexao.cursor()
-        cursor.execute("SELECT latitude, longitude FROM endereco")
+        cursor.execute("SELECT latitude, longitude FROM ovitrampas")
         localizacoes = cursor.fetchall()
         cursor.close()
         conexao.close()
@@ -28,17 +30,29 @@ def buscar_localizacoes():
     else:
         return None
     
-def buscar_ovi(semana=None):
+# Buscar semanas disponíveis na tabela "relatorio"
+def buscar_semanas():
     conexao = conectar()
     if conexao:
         cursor = conexao.cursor()
-        if semana:
-            cursor.execute(f"SELECT semana_3, semana_5, semana_7, semana_9, semana_11, semana_15, semana_17, semana_19, semana_21, semana_25, semana_27 FROM semanas")
-        else:
-            cursor.execute("SELECT semana_3, semana_5, semana_7, semana_9, semana_11, semana_15, semana_17, semana_19, semana_21, semana_25, semana_27 FROM semanas")
+        cursor.execute("SELECT DISTINCT semana FROM relatorio ORDER BY semana")
+        semanas = cursor.fetchall()
+        cursor.close()
+        conexao.close()
+        return [semana[0] for semana in semanas]  # Retorna uma lista de semanas disponíveis
+    else:
+        return None
+
+# Buscar quantidade de ovos por semana específica da tabela "relatorio"
+def buscar_ovi(semana):
+    conexao = conectar()
+    if conexao:
+        cursor = conexao.cursor()
+        query = "SELECT quant_ovos FROM relatorio WHERE semana = %s"
+        cursor.execute(query, (semana,))
         ovos = cursor.fetchall()
         cursor.close()
         conexao.close()
-        return ovos
+        return [ovo[0] for ovo in ovos]  # Retorna uma lista com as quantidades de ovos
     else:
         return None
